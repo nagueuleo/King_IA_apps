@@ -12,7 +12,7 @@ Cette application web est créée et déployée sur Streamlit.
 
 ## 💡 Comment utiliser notre application web
 
-![alt text]("./pn.png")
+![Logo](pn.png)
 
 ## 🚀 Installation et Démarrage
 
