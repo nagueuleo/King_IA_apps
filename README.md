@@ -14,11 +14,6 @@ Cette application web est créée et déployée sur Streamlit.
 
 ![alt text](https://raw.githubusercontent.com/mvram123/mvram123/main/Pneumonia/Webapp.png)
 
-Étape 1 : Cliquez sur ce lien pour accéder à notre application web : Détection de la pneumonie (https://share.streamlit.io/mvram123/pneumonia-detection/main/app.py)
-
-Étape 2 : Saisissez l'URL de l'image à classifier et appuyez sur Entrée.
-
-Étape 3 : C'est tout ! Vous obtiendrez le résultat.
 ## 🚀 Installation et Démarrage
 
 ### Prérequis
@@ -30,10 +25,10 @@ Cette application web est créée et déployée sur Streamlit.
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/mvram123/Pneumonia-Detection.git
+git clone https://github.com/nagueuleo/King_IA_apps.git
 
 # Accéder au répertoire du projet
-cd Pneumonia-Detection
+cd King_IA_apps
 ```
 
 ### Étape 2 : Créer un environnement virtuel (optionnel mais recommandé)
