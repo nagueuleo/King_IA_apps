@@ -9,6 +9,10 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from datetime import datetime
 import base64
+import json
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report, precision_score, recall_score, f1_score
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -157,6 +161,30 @@ st.markdown("""
         text-align: center;
         border: 1px solid #667eea;
     }
+    
+    .metrics-container {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 25px;
+        border-radius: 10px;
+        border: 2px solid #667eea;
+        margin-top: 20px;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .metrics-table {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #cbd5e1;
+        border-collapse: collapse;
+    }
+    
+    .metrics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: bold;
+        border-radius: 8px 8px 0 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -187,6 +215,40 @@ def load_model():
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement du modèle: {str(e)}")
         st.stop()
+
+def load_metrics_from_file():
+    """Charge les métriques depuis le fichier JSON"""
+    try:
+        with open("reports/metrics/metric.json", "r") as f:
+            data = json.load(f)
+        return data.get('model_metric', [])
+    except:
+        return []
+
+def plot_confusion_matrix(y_true, y_pred, class_names):
+    """Crée et affiche la matrice de confusion"""
+    cm = confusion_matrix(y_true, y_pred)
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=class_names, 
+                yticklabels=class_names,
+                cbar_kws={'label': 'Nombre de prédictions'},
+                ax=ax, annot_kws={"size": 14}, cbar=True)
+    
+    plt.title('Matrice de Confusion', fontsize=16, fontweight='bold', pad=20)
+    plt.ylabel('Vraies Valeurs', fontsize=12)
+    plt.xlabel('Valeurs Prédites', fontsize=12)
+    plt.xticks(rotation=45)
+    plt.yticks(rotation=0)
+    plt.tight_layout()
+    
+    return fig
+
+def get_classification_report_display(y_true, y_pred, class_names):
+    """Crée un rapport de classification formaté"""
+    report = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
+    return report
 
 # Classes de prédiction
 classes = ['Pneumonie Bactérienne', 'Normal', 'Pneumonie Virale']
@@ -331,6 +393,72 @@ with tab1:
             with cols[i]:
                 confidence_pct = float(prediction[0][i] * 100)
                 st.metric(class_name, f"{confidence_pct:.1f}%")
+        
+        # Section des métriques d'évaluation
+        st.markdown("---")
+        st.markdown("### 📈 Métriques d'évaluation du modèle")
+        
+        # Charger les métriques du fichier
+        metrics_history = load_metrics_from_file()
+        
+        if metrics_history:
+            latest_metrics = metrics_history[-1]  # Prendre les dernières métriques
+            
+            # Afficher la matrice de confusion
+            st.subheader("Matrice de Confusion")
+            cm_data = np.array(latest_metrics.get('confusion_matrix', []))
+            if len(cm_data) > 0:
+                fig = plt.figure(figsize=(10, 8))
+                sns.heatmap(cm_data, annot=True, fmt='d', cmap='Blues',
+                           xticklabels=classes, yticklabels=classes,
+                           cbar_kws={'label': 'Nombre de prédictions'},
+                           annot_kws={"size": 12}, cbar=True)
+                plt.title('Matrice de Confusion', fontsize=14, fontweight='bold', pad=20)
+                plt.ylabel('Vraies Valeurs', fontsize=11)
+                plt.xlabel('Valeurs Prédites', fontsize=11)
+                plt.xticks(rotation=45)
+                plt.yticks(rotation=0)
+                plt.tight_layout()
+                st.pyplot(fig)
+            
+            # Afficher le rapport de classification
+            st.subheader("Rapport de Classification")
+            
+            precision = latest_metrics.get('precision', [0, 0, 0])
+            recall = latest_metrics.get('recall', [0, 0, 0])
+            f1 = latest_metrics.get('f1_score', [0, 0, 0])
+            
+            # Créer un DataFrame pour afficher les métriques
+            metrics_data = {
+                'Classe': classes,
+                'Précision': [f"{p:.4f}" for p in precision],
+                'Rappel': [f"{r:.4f}" for r in recall],
+                'F1-Score': [f"{f:.4f}" for f in f1]
+            }
+            
+            # Afficher le tableau
+            metrics_df = st.dataframe(metrics_data, use_container_width=True)
+            
+            # Afficher les statistiques globales
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                avg_precision = np.mean(precision)
+                st.metric("Précision Moyenne", f"{avg_precision:.4f}")
+            
+            with col2:
+                avg_recall = np.mean(recall)
+                st.metric("Rappel Moyen", f"{avg_recall:.4f}")
+            
+            with col3:
+                avg_f1 = np.mean(f1)
+                st.metric("F1-Score Moyen", f"{avg_f1:.4f}")
+            
+            # Timestamp des métriques
+            timestamp = latest_metrics.get('time_stamp', 'N/A')
+            st.info(f"📅 Métriques du: {timestamp}")
+        else:
+            st.warning("⚠️ Aucune métrique disponible. Assurez-vous que le modèle a été évalué.")
 
 with tab2:
     st.markdown("### 📋 Historique des analyses")

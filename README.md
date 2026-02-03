@@ -12,7 +12,7 @@ Cette application web est créée et déployée sur Streamlit.
 
 ## 💡 Comment utiliser notre application web
 
-![Logo](pn.png)
+![alt text](https://raw.githubusercontent.com/mvram123/mvram123/main/Pneumonia/Webapp.png)
 
 ## 🚀 Installation et Démarrage
 
